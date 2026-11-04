@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover lets the app paint under the notch; the safe-area
+         insets in index.css keep the header out from under it. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b0d14" />
+
+    <title>Earworm — an idea in, a song out</title>
+    <meta name="author" content="Galvin Lam" />
+    <meta
+      name="description"
+      content="Turn one line of an idea into a structured song draft: lyrics, chords, a singable melody and a band to play it. Runs entirely in your browser."
+    />
+
+    <!-- Social preview. The file ships from public/, so this resolves on any
+         host served from the domain root. Scrapers prefer an absolute URL, and
+         a GitHub Pages *project* site serves from /<repo>/ — so once deployed,
+         set this to the full URL, e.g.
+         https://you.github.io/earworm/og-image.png -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Earworm — an idea in, a song out" />
+    <meta
+      property="og:description"
+      content="Lyrics, chords, melody and a band to play it. Free models, no backend, nothing to sign up for."
+    />
+    <meta property="og:url" content="https://galvinlam.github.io/earworm/" />
+    <meta property="og:image" content="https://galvinlam.github.io/earworm/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!-- iOS ignores an SVG here, so it gets a PNG. -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- Home-screen install. The first is the standard; the second is the
+         older Apple spelling, which iOS still needs. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Earworm" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

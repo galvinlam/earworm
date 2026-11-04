@@ -1,0 +1,32 @@
+# Runs the smoke suite on every push and pull request.
+#
+# Playwright is installed here rather than listed as a dependency: it is a
+# large download, and only the PWA and audio-render checks need it. Locally,
+# those checks report as skipped without it.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for the browser checks
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - run: npm run smoke
