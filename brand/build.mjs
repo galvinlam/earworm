@@ -26,7 +26,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const NAME = 'Earworm';
 const TAGLINE = 'Write the bit they cannot shake.';
-const BLURB = 'Lock the chorus that works, rewrite the verse that does not, export the MIDI. Free models, no backend, nothing to sign up for.';
+const BLURB = 'Lock the chorus that works, rewrite the verse that does not, export the MIDI. Runs in your browser, on free models.';
 
 const write = (rel, data) => {
   const path = resolve(ROOT, rel);
