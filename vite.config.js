@@ -30,7 +30,7 @@ export default defineConfig({
       includeAssets: ['icon.svg', 'icons/apple-touch-icon.png', 'og-image.png'],
 
       manifest: {
-        name: 'Earworm — AI Song Architect',
+        name: 'Earworm — an idea in, a song out',
         short_name: 'Earworm',
         description:
           'Turn one line of an idea into a song draft: lyrics, chords, melody and a band to play it.',

@@ -66,7 +66,7 @@ export function songToMarkdown(song, { includeChords = true, includeNotes = true
     }
   }
 
-  out.push('---', '', '*Drafted with Earworm — AI Song Architect.*');
+  out.push('---', '', '*Drafted with [Earworm](https://github.com/galvinlam/earworm).*');
   return out.join('\n');
 }
 
