@@ -9,6 +9,11 @@
  *   prefix 'p' — plain JSON (fallback)
  *
  * Field names are shortened before encoding, which roughly halves the link.
+ *
+ * A link can also carry the sound it was made with — instrument, bass, kit,
+ * groove and parts — so the person opening it hears the same arrangement
+ * rather than whatever their own settings happen to be. Older links have no
+ * sound and open exactly as before.
  */
 
 import { makeId } from './songSchema.js';
@@ -50,8 +55,41 @@ async function inflate(bytes) {
 // Compact representation
 // ---------------------------------------------------------------------------
 
-function pack(song) {
+/** Sound fields, and their short names on the wire. */
+const SOUND_KEYS = {
+  instrument: 'i',
+  bassInstrument: 'bi',
+  drumKit: 'd',
+  groove: 'gr',
+  bassStyle: 'bs',
+  compStyle: 'cs',
+};
+
+function packSound(sound) {
+  if (!sound) return undefined;
+  const out = {};
+  for (const [key, short] of Object.entries(SOUND_KEYS)) {
+    if (typeof sound[key] === 'string' && sound[key]) out[short] = sound[key];
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * Names only, unchecked against the instrument tables: this module stays free
+ * of the audio engine, so whoever applies the sound decides what is valid.
+ */
+function unpackSound(data) {
+  if (!data || typeof data !== 'object') return null;
+  const out = {};
+  for (const [key, short] of Object.entries(SOUND_KEYS)) {
+    if (typeof data[short] === 'string' && data[short].length <= 40) out[key] = data[short];
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+function pack(song, sound) {
   return {
+    a: packSound(sound),
     t: song.title,
     k: song.key,
     b: song.tempo,
@@ -97,9 +135,12 @@ function unpack(data) {
 // Public API
 // ---------------------------------------------------------------------------
 
-/** Encode a song into the fragment payload (without the leading "#s="). */
-export async function encodeSong(song) {
-  const json = JSON.stringify(pack(song));
+/**
+ * Encode a song into the fragment payload (without the leading "#s=").
+ * @param {object} [sound]  instrument, bassInstrument, drumKit, groove, bassStyle, compStyle
+ */
+export async function encodeSong(song, sound) {
+  const json = JSON.stringify(pack(song, sound));
   const bytes = new TextEncoder().encode(json);
   const compressed = await deflate(bytes).catch(() => null);
   return compressed && compressed.length < bytes.length
@@ -108,14 +149,22 @@ export async function encodeSong(song) {
 }
 
 /** Full shareable URL for the current page. */
-export async function buildShareUrl(song) {
-  const payload = await encodeSong(song);
+export async function buildShareUrl(song, sound) {
+  const payload = await encodeSong(song, sound);
   const { origin, pathname } = window.location;
   return `${origin}${pathname}#s=${payload}`;
 }
 
 /** Decode a payload back into a song, or null if it is unusable. */
 export async function decodeSong(payload) {
+  return (await decodeShare(payload))?.song ?? null;
+}
+
+/**
+ * Decode a payload into the song and the sound it was shared with.
+ * @returns {Promise<{song: object, sound: object|null}|null>}
+ */
+export async function decodeShare(payload) {
   if (!payload || payload.length < 2) return null;
   try {
     const prefix = payload[0];
@@ -129,7 +178,7 @@ export async function decodeSong(payload) {
     }
     const data = JSON.parse(new TextDecoder().decode(jsonBytes));
     const song = unpack(data);
-    return song.sections.length ? song : null;
+    return song.sections.length ? { song, sound: unpackSound(data.a) } : null;
   } catch {
     return null;
   }
@@ -137,10 +186,15 @@ export async function decodeSong(payload) {
 
 /** Read a shared song out of the current URL fragment, if present. */
 export async function readSongFromUrl() {
+  return (await readShareFromUrl())?.song ?? null;
+}
+
+/** The shared song and its sound, out of the current URL fragment. */
+export async function readShareFromUrl() {
   const hash = window.location.hash || '';
   const match = /[#&]s=([^&]+)/.exec(hash);
   if (!match) return null;
-  return decodeSong(match[1]);
+  return decodeShare(match[1]);
 }
 
 /** Remove the share payload from the address bar without reloading. */

@@ -15,7 +15,8 @@ import { useSettingsStore } from '../src/store/useSettingsStore.js';
 import { normaliseSong, parseModelJson } from '../src/lib/songSchema.js';
 import { songToMarkdown, songToPlainText } from '../src/lib/exporters.js';
 import { songToMidi } from '../src/lib/midi.js';
-import { encodeSong, decodeSong } from '../src/lib/share.js';
+import { encodeSong, decodeSong, decodeShare } from '../src/lib/share.js';
+import { validSharedSound } from '../src/lib/sharedSound.js';
 import { voiceLeadChord, bassNoteFor } from '../src/lib/musicTheory.js';
 import { INSTRUMENTS, DEFAULT_INSTRUMENT, DRUM_KITS, DEFAULT_DRUM_KIT, BASS_INSTRUMENTS, DEFAULT_BASS_INSTRUMENT, instrumentVoicing } from '../src/lib/audioEngine.js';
 import { GROOVES, BASS_STYLES, COMP_STYLES, resolveGroove, stepToBeats, STEPS_PER_BAR, partsForSong } from '../src/lib/groove.js';
@@ -853,6 +854,23 @@ export async function run() {
     if (back.sections.length !== song.sections.length) throw new Error('sections lost');
     if (back.sections[1].chords.join() !== song.sections[1].chords.join()) throw new Error('chords lost');
     if (back.sections[2].melodyContour.join() !== song.sections[2].melodyContour.join()) throw new Error('contour lost');
+  });
+
+  await check('share: a link carries the sound it was made with', async () => {
+    const sound = { instrument: 'guitarAcoustic', bassInstrument: 'upright', drumKit: 'acoustic', groove: 'auto', bassStyle: 'walking', compStyle: 'strum' };
+    const shared = await decodeShare(await encodeSong(song, sound));
+    for (const [k, v] of Object.entries(sound)) {
+      if (shared.sound?.[k] !== v) throw new Error(`${k} lost: ${JSON.stringify(shared.sound)}`);
+    }
+    // Links made before this have no sound and still open.
+    const old = await decodeShare(payload);
+    if (!old?.song || old.sound !== null) throw new Error('an old-style link should have no sound');
+  });
+
+  await check('share: only sounds this version knows are applied', () => {
+    const v = validSharedSound({ instrument: 'theremin', bassInstrument: 'picked', groove: 'auto', drumKit: '__proto__', compStyle: 'toString' });
+    if (JSON.stringify(v) !== JSON.stringify({ bassInstrument: 'picked', groove: 'auto' })) throw new Error(JSON.stringify(v));
+    if (validSharedSound({ instrument: 'nope' }) !== null) throw new Error('nothing valid should give null');
   });
 
   await check('share: malformed payload decodes to null', async () => {

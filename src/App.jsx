@@ -11,7 +11,8 @@ import { useSongStore } from './store/useSongStore.js';
 import { useSettingsStore } from './store/useSettingsStore.js';
 import { useSongGeneration } from './hooks/useSongGeneration.js';
 import { useOnlineStatus } from './hooks/useOnlineStatus.js';
-import { readSongFromUrl, clearShareFromUrl } from './lib/share.js';
+import { readShareFromUrl, clearShareFromUrl } from './lib/share.js';
+import { validSharedSound } from './lib/sharedSound.js';
 import { setVolume, setDrumLevel, stopPlayback } from './lib/audioEngine.js';
 import { toast } from './store/useToastStore.js';
 
@@ -41,12 +42,19 @@ export default function App() {
   // --- share links ---------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
-    readSongFromUrl()
+    readShareFromUrl()
       .then((shared) => {
         if (cancelled || !shared) return;
-        loadSong(shared, { readOnly: true });
+        loadSong(shared.song, { readOnly: true });
+        // Play it the way it was made. Unknown names (an older or newer
+        // version of the app) are dropped rather than trusted.
+        const sound = validSharedSound(shared.sound);
+        if (sound) useSettingsStore.getState().set(sound);
         clearShareFromUrl();
-        toast.info(`Opened a shared draft: "${shared.title}". It is read-only until you make it yours.`);
+        toast.info(
+          `Opened a shared draft: "${shared.song.title}". It is read-only until you make it yours`
+          + (sound ? ', and it plays with the sound it was shared with.' : '.'),
+        );
       })
       .catch(() => {});
     return () => { cancelled = true; };

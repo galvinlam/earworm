@@ -157,7 +157,10 @@ export default function ExportMenu({ song }) {
         {
           label: 'Copy read-only link',
           onClick: run(async () => {
-            const url = await buildShareUrl(song);
+            // The link carries the sound too, so it opens the way it plays here.
+            const url = await buildShareUrl(song, {
+              instrument, bassInstrument, drumKit, groove: grooveSetting, bassStyle, compStyle,
+            });
             if (url.length > 8000) {
               toast.error('This song is too long to fit in a link — download the JSON instead.');
               return false;
